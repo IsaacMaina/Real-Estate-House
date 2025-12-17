@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaBed, FaBath, FaRulerCombined, FaCar, FaMapMarkerAlt, FaHeart, FaRegHeart, FaShareAlt, FaWhatsapp, FaEnvelope, FaPhone, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Navigation from '@/components/Navigation';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
@@ -205,8 +206,8 @@ const PropertyDetailPageClient = ({ property }: PropertyDetailPageClientProps) =
             <FaChevronRight className="w-6 h-6" />
           </button>
 
-          {/* Image Thumbnails */}
-          <div className="absolute bottom-40 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+          {/* Image Thumbnails - lifted up to avoid touching property details */}
+          <div className="absolute bottom-48 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
             {propertyImages.map((img, index) => (
               <button
                 key={index}

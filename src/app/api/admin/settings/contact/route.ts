@@ -2,6 +2,9 @@
 import { NextRequest } from 'next/server';
 import { getDbPool } from '@/lib/db';
 
+// Force this route to be dynamic since it accesses database
+export const dynamic = 'force-dynamic';
+
 export interface ContactInfo {
   phone: string;
   displayPhone: string;

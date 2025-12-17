@@ -5,6 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import PropertyGrid from '@/components/PropertyGrid';
 import { useState, useEffect } from 'react';
 
+// Force this route to be dynamic since it accesses search parameters and fetches data
+export const dynamic = 'force-dynamic';
+
 interface Property {
   id: string;
   title: string;

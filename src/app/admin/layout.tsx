@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FaUser, FaSignOutAlt, FaGlobe, FaCaretDown } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaGlobe, FaCaretDown, FaCog } from 'react-icons/fa';
 import { signOut } from 'next-auth/react';
 
 interface User {
@@ -137,9 +137,28 @@ export default function AdminLayout({
                   <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                   <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
+                {user?.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    <FaCog className="mr-2" />
+                    <span>Admin Dashboard</span>
+                  </Link>
+                )}
+                <Link
+                  href="/user-dashboard"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <FaUser className="mr-2" />
+                  <span>My Dashboard</span>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  onClickCapture={() => setShowDropdown(false)}
                 >
                   <FaSignOutAlt className="mr-2" />
                   <span>Logout</span>

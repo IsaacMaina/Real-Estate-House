@@ -18,6 +18,7 @@ const Navigation = () => {
   const [locations, setLocations] = useState<string[]>([]);
   const navbarRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
@@ -33,12 +34,32 @@ const Navigation = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 0);
+      setScrolled(window.scrollY > 10); // Changed threshold to prevent flickering
     };
 
     window.addEventListener('scroll', handleScroll);
+    // Set initial scroll state to prevent layout shift
+    handleScroll();
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileMenuRef.current && isMenuOpen && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   // Fetch property types and locations from the database
   useEffect(() => {
@@ -154,9 +175,7 @@ const Navigation = () => {
   return (
     <header
       ref={navbarRef}
-      className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white py-2 shadow-md' : 'bg-white/90 backdrop-blur py-4'
-      }`}
+      className="fixed w-full z-50 bg-white py-4 shadow-sm transition-all duration-300"
     >
       <nav className="container mx-auto px-4 flex justify-between items-center">
 
@@ -331,24 +350,37 @@ const Navigation = () => {
         </button>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu with modern design and animations */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white shadow-lg"
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            ref={mobileMenuRef}
+            className="md:hidden bg-gradient-to-b from-white to-gray-100 shadow-2xl fixed top-0 right-0 h-screen w-3/4 max-w-sm z-50 overflow-y-auto"
           >
-            <div className="container mx-auto px-4 py-4 flex flex-col min-h-[calc(100vh-100px)]">
-              <div className="relative">
+            <div className="container mx-auto px-6 py-8 flex flex-col min-h-screen">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Menu</h3>
                 <button
-                  className="flex items-center text-gray-700 hover:text-indigo-600 transition-colors w-full pb-2 border-b border-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+                  aria-label="Close menu"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="mb-6">
+                <button
+                  className="flex items-center justify-between w-full text-lg font-medium text-gray-800 hover:text-indigo-600 transition-colors py-4 px-2 border-b border-gray-200"
                   onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
                 >
-                  Locations
+                  <span>🌍 Locations</span>
                   <svg
-                    className={`ml-auto w-4 h-4 transition-transform ${isLocationDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-5 h-5 transition-transform ${isLocationDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -359,29 +391,37 @@ const Navigation = () => {
                 </button>
 
                 {isLocationDropdownOpen && (
-                  <div className="pl-4 mt-2 space-y-2">
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 space-y-1 pl-4"
+                  >
                     {locations.map((location, index) => (
                       <Link
                         key={index}
                         href={`/properties?location=${location}`}
-                        className="block py-1 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
+                        className="block py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors rounded-lg px-4"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsLocationDropdownOpen(false);
+                        }}
                       >
                         {location}
                       </Link>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
               </div>
 
-              <div className="relative">
+              <div className="mb-6">
                 <button
-                  className="flex items-center text-gray-700 hover:text-indigo-600 transition-colors w-full pb-2 border-b border-gray-100"
+                  className="flex items-center justify-between w-full text-lg font-medium text-gray-800 hover:text-indigo-600 transition-colors py-4 px-2 border-b border-gray-200"
                   onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                 >
-                  Properties
+                  <span>🏠 Properties</span>
                   <svg
-                    className={`ml-auto w-4 h-4 transition-transform ${isTypeDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-5 h-5 transition-transform ${isTypeDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -392,50 +432,79 @@ const Navigation = () => {
                 </button>
 
                 {isTypeDropdownOpen && (
-                  <div className="pl-4 mt-2 space-y-2">
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 space-y-1 pl-4"
+                  >
                     {propertyTypes.map((type, index) => (
                       <Link
                         key={index}
                         href={type.toLowerCase() === 'any' ? '/properties' : `/properties?propertyType=${encodeURIComponent(type)}`}
-                        className="block py-1 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
+                        className="block py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors rounded-lg px-4"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsTypeDropdownOpen(false);
+                        }}
                       >
                         {type}
                       </Link>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
               </div>
 
-              <Link href="/services" className="text-gray-700 hover:text-indigo-600 transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                href="/services"
+                className="text-lg font-medium py-4 px-2 text-gray-800 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors flex items-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
                 Services
               </Link>
 
-              <Link href="/about" className="text-gray-700 hover:text-indigo-600 transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-                About
+              <Link
+                href="/about"
+                className="text-lg font-medium py-4 px-2 text-gray-800 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors flex items-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                About Us
               </Link>
-              <Link href="/contact" className="text-gray-700 hover:text-indigo-600 transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                href="/contact"
+                className="text-lg font-medium py-4 px-2 text-gray-800 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors flex items-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
                 Contact
               </Link>
 
               {/* Mobile User Section - moved to the bottom */}
-              <div className="mt-auto pt-6 border-t border-gray-100">
+              <div className="mt-auto pt-8 border-t border-gray-200">
                 {status === 'authenticated' ? (
                   <div className="relative">
                     <div
-                      className="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer"
+                      className="flex items-center p-4 bg-indigo-50 rounded-xl cursor-pointer shadow-sm"
                       onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                     >
                       {/* Mobile Avatar with Initials */}
-                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium mr-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white font-medium mr-4">
                         {session.user.name ? session.user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
                       </div>
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">{session.user.name || session.user.email.split('@')[0]}</div>
-                        <div className="text-xs text-gray-500">{session.user.email}</div>
+                        <div className="font-medium text-gray-900">{session.user.name || session.user.email.split('@')[0]}</div>
+                        <div className="text-sm text-gray-600">{session.user.email}</div>
                       </div>
                       <svg
-                        className={`w-4 h-4 ml-auto transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`}
+                        className={`w-5 h-5 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -447,31 +516,60 @@ const Navigation = () => {
 
                     {/* Dropdown Menu */}
                     {isUserDropdownOpen && (
-                      <div ref={mobileUserDropdownRef} className="mt-2 bg-white rounded-lg shadow-lg py-2 border border-gray-200">
-                        {session?.user?.role === 'admin' && (
-                          <Link href="/admin" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" onClick={() => setIsMenuOpen(false)}>
-                            <FaCog className="w-4 h-4 inline mr-2" /> Admin Dashboard
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
+                      >
+                        <div className="py-2">
+                          {session?.user?.role === 'admin' && (
+                            <Link
+                              href="/admin"
+                              className="flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                              onClick={() => {
+                                setIsMenuOpen(false);
+                                setIsUserDropdownOpen(false);
+                              }}
+                            >
+                              <FaCog className="w-5 h-5 mr-3" />
+                              Admin Dashboard
+                            </Link>
+                          )}
+                          <Link
+                            href="/user-dashboard"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              setIsUserDropdownOpen(false);
+                            }}
+                          >
+                            <FaUser className="w-5 h-5 mr-3" />
+                            My Dashboard
                           </Link>
-                        )}
-                        <Link href="/user-dashboard" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" onClick={() => setIsMenuOpen(false)}>
-                          <FaUser className="w-4 h-4 inline mr-2" /> My Dashboard
-                        </Link>
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            setIsMenuOpen(false);
-                            setIsUserDropdownOpen(false);
-                          }}
-                          className="w-full text-left block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center"
-                        >
-                          <FaSignOutAlt className="w-4 h-4 inline mr-2" /> Logout
-                        </button>
-                      </div>
+                          <button
+                            onClick={() => {
+                              handleLogout();
+                              setIsMenuOpen(false);
+                              setIsUserDropdownOpen(false);
+                            }}
+                            className="w-full text-left flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                          >
+                            <FaSignOutAlt className="w-5 h-5 mr-3" />
+                            Logout
+                          </button>
+                        </div>
+                      </motion.div>
                     )}
                   </div>
                 ) : (
-                  <Link href="/login" className="flex items-center text-gray-700 hover:text-indigo-600 transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-                    <FaSignInAlt className="w-5 h-5 mr-2" /> Login
+                  <Link
+                    href="/login"
+                    className="flex items-center justify-center py-4 px-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FaSignInAlt className="w-5 h-5 mr-3" />
+                    <span className="text-lg font-medium">Login</span>
                   </Link>
                 )}
               </div>

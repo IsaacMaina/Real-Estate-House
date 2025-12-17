@@ -6,6 +6,9 @@ import PropertyGridWrapper from './PropertyGridWrapper';
 import { getAllProperties } from '@/lib/db-actions';
 import MainLayout from '@/layouts/MainLayout';
 
+// Force this route to be dynamic since it fetches property data
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Premium Properties in Kenya | Luxury Kenya Real Estate',
   description: 'Browse our collection of premium luxury properties across Kenya. Find your dream home with our sophisticated real estate platform.',
