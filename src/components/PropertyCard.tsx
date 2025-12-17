@@ -63,8 +63,8 @@ const PropertyCard = ({ property, isLarge = false, onClick }: PropertyCardProps)
 
   return (
     <div className={`relative rounded-2xl overflow-hidden shadow-lg cursor-pointer property-card ${isLarge ? 'h-[600px]' : 'h-[400px]'} flex flex-col`}>
-      {/* Property Image */}
-      <div className="relative flex-shrink-0 h-48">
+      {/* Fullscreen background image */}
+      <div className="absolute inset-0">
         <img
           src={property.image}
           alt={property.title}
@@ -72,35 +72,38 @@ const PropertyCard = ({ property, isLarge = false, onClick }: PropertyCardProps)
         />
       </div>
 
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-0"></div>
+
       {/* Property details at bottom */}
-      <div className="bg-white p-4 flex-grow flex flex-col justify-between z-10">
-        <div>
+      <div className="relative z-10 p-4 flex flex-col justify-end h-full">
+        <div className="pb-4"> {/* Reduced padding to bring content closer to WhatsApp button */}
           <div className="flex justify-between items-start mb-2">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{property.title}</h3>
-              <p className="text-gray-600 text-sm flex items-center">
+              <h3 className="text-lg font-bold text-white line-clamp-1">{property.title}</h3>
+              <p className="text-indigo-200 text-sm flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path>
                 </svg>
                 {property.location}
               </p>
             </div>
-            <span className="text-lg font-bold text-indigo-600">{property.price}</span>
+            <span className="text-lg font-bold text-white">{property.price}</span>
           </div>
 
-          <div className="flex flex-wrap gap-3 mb-3">
+          <div className="flex flex-wrap gap-3 mb-2"> {/* Reduced margin-bottom */}
             <div className="flex items-center">
-              <FaBed className="w-4 h-4 mr-1 text-gray-600" />
-              <span className="text-sm">{Math.round(property.beds)} beds</span>
+              <FaBed className="w-4 h-4 mr-1 text-white/80" />
+              <span className="text-sm text-white">{Math.round(property.beds)} beds</span>
             </div>
             <div className="flex items-center">
-              <FaBath className="w-4 h-4 mr-1 text-gray-600" />
-              <span className="text-sm">{Math.round(property.baths)} baths</span>
+              <FaBath className="w-4 h-4 mr-1 text-white/80" />
+              <span className="text-sm text-white">{Math.round(property.baths)} baths</span>
             </div>
           </div>
         </div>
 
-        {/* WhatsApp Contact Button - smaller and more compact */}
+        {/* WhatsApp Contact Button - positioned at the bottom */}
         <div className="mt-2">
           <Link
             href={

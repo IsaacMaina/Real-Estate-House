@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaBed, FaBath, FaRulerCombined, FaCar, FaMapMarkerAlt, FaHeart, FaRegHeart, FaShareAlt, FaWhatsapp, FaEnvelope, FaPhone, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaBed, FaBath, FaRulerCombined, FaCar, FaMapMarkerAlt, FaHeart, FaRegHeart, FaShareAlt, FaWhatsapp, FaEnvelope, FaPhone, FaChevronLeft, FaChevronRight, FaUser } from 'react-icons/fa';
 import Navigation from '@/components/Navigation';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import { getWhatsAppNumber, getDisplayPhone } from '@/lib/contact-config';
@@ -69,6 +69,11 @@ interface PropertyDetailPageClientProps {
 }
 
 const PropertyDetailPageClient = ({ property }: PropertyDetailPageClientProps) => {
+  // Generate additional images for the property (using actual images from the database)
+  const propertyImages = property.images ?
+    property.images.map(img => img.url) :
+    [property.image];
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [savedProperties, setSavedProperties] = useState<string[]>([]);
   const [viewingData, setViewingData] = useState({
@@ -82,6 +87,9 @@ const PropertyDetailPageClient = ({ property }: PropertyDetailPageClientProps) =
   const [isViewingSubmitting, setIsViewingSubmitting] = useState(false);
   const [viewingSuccessMessage, setViewingSuccessMessage] = useState('');
 
+  // State to track if auto-advance should be paused
+  const [autoAdvancePaused, setAutoAdvancePaused] = useState(false);
+
   // Load saved properties from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('savedProperties');
@@ -89,6 +97,28 @@ const PropertyDetailPageClient = ({ property }: PropertyDetailPageClientProps) =
       setSavedProperties(JSON.parse(saved));
     }
   }, []);
+
+  // Auto-advance carousel every 5 seconds (unless paused)
+  useEffect(() => {
+    if (autoAdvancePaused) return; // Don't auto-advance if paused
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex(prevIndex => {
+        const totalImages = property.images?.length || 1;
+        return (prevIndex + 1) % totalImages;
+      });
+    }, 5000); // Change image every 5 seconds
+
+    // Clear interval on component unmount
+    return () => clearInterval(interval);
+  }, [property.images, property.image, autoAdvancePaused]);
+
+  // Reset auto-advance when user interacts with thumbnails
+  const resetAutoAdvance = () => {
+    setAutoAdvancePaused(true);
+    // Restart auto-advance after 10 seconds of inactivity
+    setTimeout(() => setAutoAdvancePaused(false), 10000);
+  };
 
   // Toggle saving a property
   const toggleSave = (propertyId: string) => {
@@ -159,22 +189,17 @@ const PropertyDetailPageClient = ({ property }: PropertyDetailPageClientProps) =
     }
   };
 
-  // Navigate between property images
-  const nextImage = () => {
-    setCurrentImageIndex(prev => 
-      prev === (property.images?.length || 1) - 1 ? 0 : prev + 1
-    );
+
+  // Function to handle thumbnail click
+  const handleThumbnailClick = (index: number) => {
+    const totalImages = property.images?.length || 1;
+    // Ensure the index is within valid range
+    if (index >= 0 && index < totalImages) {
+      setCurrentImageIndex(index);
+      resetAutoAdvance(); // Pause auto-advance when user interacts
+    }
   };
 
-  const prevImage = () => {
-    setCurrentImageIndex(prev => 
-      prev === 0 ? (property.images?.length || 1) - 1 : prev - 1
-    );
-  };
-
-  const propertyImages = property.images?.length 
-    ? property.images.map(img => img.url) 
-    : [property.image];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -182,7 +207,9 @@ const PropertyDetailPageClient = ({ property }: PropertyDetailPageClientProps) =
       <main className="pt-24">
         {/* Property Header with Hero Image */}
         <div className="relative h-[90vh] w-full">
-          <div className="absolute inset-0">
+          <div
+            className="absolute inset-0"
+          >
             <img
               src={propertyImages[currentImageIndex]}
               alt={`${property.title} - Image ${currentImageIndex + 1}`}
@@ -190,30 +217,17 @@ const PropertyDetailPageClient = ({ property }: PropertyDetailPageClientProps) =
             />
           </div>
 
-          {/* Navigation Arrows */}
-          <button
-            onClick={prevImage}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-3 rounded-full hover:bg-black/50 transition-colors z-10"
-            aria-label="Previous image"
-          >
-            <FaChevronLeft className="w-6 h-6" />
-          </button>
-          <button
-            onClick={nextImage}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-3 rounded-full hover:bg-black/50 transition-colors z-10"
-            aria-label="Next image"
-          >
-            <FaChevronRight className="w-6 h-6" />
-          </button>
 
           {/* Image Thumbnails - lifted up to avoid touching property details */}
           <div className="absolute bottom-48 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
             {propertyImages.map((img, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentImageIndex(index)}
-                className={`w-16 h-12 border-2 rounded-md overflow-hidden ${
-                  currentImageIndex === index ? 'border-white ring-2 ring-indigo-500' : 'border-gray-300'
+                onClick={() => handleThumbnailClick(index)}
+                className={`w-16 h-12 border-2 rounded-md overflow-hidden transition-all duration-200 ${
+                  currentImageIndex === index
+                    ? 'border-white ring-2 ring-indigo-500 scale-105'
+                    : 'border-gray-300 hover:border-indigo-400'
                 }`}
                 aria-label={`View image ${index + 1}`}
               >
@@ -257,24 +271,32 @@ const PropertyDetailPageClient = ({ property }: PropertyDetailPageClientProps) =
                   </button>
                   <span className="text-2xl font-bold">{property.price}</span>
                 </div>
+                {property.featured && (
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 mr-1 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+                    </svg>
+                    <span>Featured</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-4 pt-4 border-t border-white/20">
                 <div className="flex items-center">
                   <FaBed className="w-5 h-5 mr-1 text-white" />
-                  <span>{Math.round(property.beds)} beds</span>
+                  <span>{Math.round(property.details.bedrooms || property.beds)} beds</span>
                 </div>
                 <div className="flex items-center">
                   <FaBath className="w-5 h-5 mr-1 text-white" />
-                  <span>{Math.round(property.baths)} baths</span>
+                  <span>{Math.round(property.details.bathrooms || property.baths)} baths</span>
                 </div>
                 <div className="flex items-center">
                   <FaRulerCombined className="w-5 h-5 mr-1 text-white" />
-                  <span>{Math.round(property.sqft * 0.092903).toLocaleString()} sqm</span>
+                  <span>{Math.round((property.sqft || property.details.sqft || 0) * 0.092903).toLocaleString()} sqm</span>
                 </div>
                 <div className="flex items-center">
                   <FaCar className="w-5 h-5 mr-1 text-white" />
-                  <span>{property.parking} parking</span>
+                  <span>{property.details.parking || property.parking} park</span>
                 </div>
               </div>
             </div>

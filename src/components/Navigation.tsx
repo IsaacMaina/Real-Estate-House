@@ -3,12 +3,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
 import { FaCog, FaUser, FaSignInAlt, FaSignOutAlt } from 'react-icons/fa';
 
 const Navigation = () => {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
@@ -303,7 +304,12 @@ const Navigation = () => {
                       <Link
                         href="/admin"
                         className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setIsUserDropdownOpen(false)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsUserDropdownOpen(false);
+                          router.push('/admin');
+                          router.refresh();
+                        }}
                       >
                         <FaCog className="w-4 h-4 inline mr-2" /> Admin Dashboard
                       </Link>
@@ -311,7 +317,12 @@ const Navigation = () => {
                     <Link
                       href="/user-dashboard"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsUserDropdownOpen(false)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsUserDropdownOpen(false);
+                        router.push('/user-dashboard');
+                        router.refresh();
+                      }}
                     >
                       <FaUser className="w-4 h-4 inline mr-2" /> My Dashboard
                     </Link>
@@ -527,9 +538,12 @@ const Navigation = () => {
                             <Link
                               href="/admin"
                               className="flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
                                 setIsMenuOpen(false);
                                 setIsUserDropdownOpen(false);
+                                router.push('/admin');
+                                router.refresh();
                               }}
                             >
                               <FaCog className="w-5 h-5 mr-3" />
@@ -539,9 +553,12 @@ const Navigation = () => {
                           <Link
                             href="/user-dashboard"
                             className="flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
                               setIsMenuOpen(false);
                               setIsUserDropdownOpen(false);
+                              router.push('/user-dashboard');
+                              router.refresh();
                             }}
                           >
                             <FaUser className="w-5 h-5 mr-3" />
