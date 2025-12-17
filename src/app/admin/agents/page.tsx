@@ -75,26 +75,6 @@ const AgentsPage = () => {
     }
   };
 
-  const handleSpecializationAdd = (agentId?: string) => {
-    if (!specializationInput.trim()) return;
-
-    if (agentId) {
-      // Editing existing agent
-      setEditingAgent(prev => prev ? {
-        ...prev,
-        specializations: [...prev.specializations, specializationInput.trim()]
-      } : null);
-    } else {
-      // Adding new agent
-      setNewAgent(prev => ({
-        ...prev,
-        specializations: [...prev.specializations, specializationInput.trim()]
-      }));
-    }
-
-    setSpecializationInput('');
-  };
-
   const handleSpecializationRemove = (indexToRemove: number, agentId?: string) => {
     if (agentId) {
       // Editing existing agent
@@ -155,56 +135,6 @@ const AgentsPage = () => {
       console.error(`Error ${agentId ? 'updating' : 'creating'} agent:`, error);
       alert(`Error ${agentId ? 'updating' : 'creating'} agent`);
     }
-  };
-
-  const startEditing = (agent: Agent) => {
-    setEditingAgent({ ...agent });
-  };
-
-  const cancelEditing = () => {
-    setEditingAgent(null);
-  };
-
-  const handleDeleteAgent = async (agentId: string) => {
-    if (!confirm('Are you sure you want to delete this agent?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/admin/agents/${agentId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        fetchAgents(); // Refresh the list
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to delete agent: ${errorData.error}`);
-      }
-    } catch (error) {
-      console.error('Error deleting agent:', error);
-      alert('Error deleting agent');
-    }
-  };
-
-  const handleSpecializationAdd = (agentId?: string) => {
-    if (!specializationInput.trim()) return;
-
-    if (agentId && editingAgent) {
-      // Editing existing agent
-      setEditingAgent({
-        ...editingAgent,
-        specializations: [...editingAgent.specializations, specializationInput.trim()]
-      });
-    } else {
-      // Adding new agent
-      setNewAgent({
-        ...newAgent,
-        specializations: [...newAgent.specializations, specializationInput.trim()]
-      });
-    }
-
-    setSpecializationInput('');
   };
 
   const handleDeleteAgent = async (agentId: string) => {

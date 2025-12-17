@@ -46,11 +46,14 @@ const usePropertySearchParams = () => {
   return params;
 };
 
-const PropertyGridWrapper = ({ initialProperties }: { initialProperties?: Property[] }) => {
+const PropertyGridWrapper = ({ initialProperties, searchParamsFromProps }: { initialProperties?: Property[]; searchParamsFromProps?: any }) => {
   const [properties, setProperties] = useState(initialProperties || []);
   const [loading, setLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
-  const searchParams = usePropertySearchParams();
+  const urlSearchParams = usePropertySearchParams();
+
+  // Combine URL parameters with passed parameters (passed from the server component)
+  const searchParams = { ...urlSearchParams, ...searchParamsFromProps };
 
   useEffect(() => {
     // Check initial online status
@@ -75,13 +78,15 @@ const PropertyGridWrapper = ({ initialProperties }: { initialProperties?: Proper
 
       setLoading(true);
       try {
-        // Construct query string from search parameters
-        const queryString = new URLSearchParams(
-          Object.fromEntries(
-            Object.entries(searchParams).filter(([_, value]) => value !== undefined)
-          )
-        ).toString();
+        // Construct query string from combined search parameters
+        const params = new URLSearchParams();
+        Object.entries(searchParams).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            params.append(key, String(value));
+          }
+        });
 
+        const queryString = params.toString();
         const response = await fetch(`/api/properties${queryString ? `?${queryString}` : ''}`);
         if (response.ok) {
           const data = await response.json();
