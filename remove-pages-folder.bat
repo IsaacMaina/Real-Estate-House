@@ -1,0 +1,1 @@
+npx rimraf "C:\Users\isaac\Documents\NextJS\real estate homes\src\app\admin\pages"
