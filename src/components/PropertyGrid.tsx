@@ -90,7 +90,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({ searchParams = {}, initialP
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Link href={`/properties/${featuredProperties[0].id}`} className="block">
+              <Link href={`/properties/${featuredProperties[0].id}`} className="hidden md:block">
                 <PropertyCard
                   property={featuredProperties[0]}
                   onClick={() => setSelectedProperty(featuredProperties[0].id)}
